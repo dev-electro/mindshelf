@@ -1,0 +1,3096 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="theme-color" content="#090b10" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <title>MindShelf — Zero-Cost AI Bookmark & Knowledge Library</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    :root, [data-theme="dark"] {
+      --bg-primary: #090b10;
+      --bg-secondary: #0f131d;
+      --bg-card: #141a29;
+      --bg-card-hover: #1b2438;
+      --bg-elevated: #1c2539;
+      --bg-glass: rgba(15, 19, 29, 0.88);
+      --text-primary: #f8fafc;
+      --text-secondary: #94a3b8;
+      --text-muted: #64748b;
+      --border-color: rgba(148, 163, 184, 0.12);
+      --border-hover: rgba(148, 163, 184, 0.28);
+      --accent: #3b82f6;
+      --accent-hover: #2563eb;
+      --accent-soft: rgba(59, 130, 246, 0.15);
+      --emerald: #10b981;
+      --emerald-soft: rgba(16, 185, 129, 0.15);
+      --amber: #f59e0b;
+      --amber-soft: rgba(245, 158, 11, 0.15);
+      --purple: #8b5cf6;
+      --purple-soft: rgba(139, 92, 246, 0.15);
+      --rose: #f43f5e;
+      --rose-soft: rgba(244, 63, 94, 0.15);
+      --shadow-sm: 0 4px 16px rgba(0, 0, 0, 0.32);
+      --shadow-md: 0 12px 28px rgba(0, 0, 0, 0.45);
+      --shadow-lg: 0 24px 60px rgba(0, 0, 0, 0.65);
+      --safe-bottom: env(safe-area-inset-bottom, 0px);
+    }
+
+    [data-theme="light"] {
+      --bg-primary: #f1f5f9;
+      --bg-secondary: #ffffff;
+      --bg-card: #ffffff;
+      --bg-card-hover: #f8fafc;
+      --bg-elevated: #f1f5f9;
+      --bg-glass: rgba(255, 255, 255, 0.9);
+      --text-primary: #0f172a;
+      --text-secondary: #475569;
+      --text-muted: #64748b;
+      --border-color: rgba(15, 23, 42, 0.09);
+      --border-hover: rgba(15, 23, 42, 0.22);
+      --accent: #2563eb;
+      --accent-hover: #1d4ed8;
+      --accent-soft: rgba(37, 99, 235, 0.1);
+      --emerald: #059669;
+      --emerald-soft: rgba(5, 150, 105, 0.1);
+      --amber: #d97706;
+      --amber-soft: rgba(217, 119, 6, 0.1);
+      --purple: #7c3aed;
+      --purple-soft: rgba(124, 58, 237, 0.1);
+      --rose: #e11d48;
+      --rose-soft: rgba(225, 29, 72, 0.1);
+      --shadow-sm: 0 2px 10px rgba(15, 23, 42, 0.05);
+      --shadow-md: 0 10px 24px rgba(15, 23, 42, 0.09);
+      --shadow-lg: 0 24px 50px rgba(15, 23, 42, 0.16);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      background-color: var(--bg-primary);
+      color: var(--text-primary);
+      line-height: 1.5;
+      overflow-x: hidden;
+      min-height: 100vh;
+      min-height: 100dvh;
+      display: flex;
+      flex-direction: column;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* SVG Icon System */
+    .icon {
+      width: 16px;
+      height: 16px;
+      stroke: currentColor;
+      stroke-width: 2;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      fill: none;
+      flex-shrink: 0;
+      display: inline-block;
+      vertical-align: middle;
+    }
+
+    .icon-sm {
+      width: 14px;
+      height: 14px;
+    }
+
+    .icon-lg {
+      width: 20px;
+      height: 20px;
+    }
+
+    /* Layout Shell with Collapsible Sidebar */
+    .app-shell {
+      display: grid;
+      grid-template-columns: 276px 1fr;
+      min-height: 100vh;
+      min-height: 100dvh;
+      transition: grid-template-columns 0.24s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .app-shell.sidebar-collapsed {
+      grid-template-columns: 0px 1fr;
+    }
+
+    .app-shell.sidebar-collapsed .sidebar {
+      width: 0;
+      padding-left: 0;
+      padding-right: 0;
+      border-right-color: transparent;
+      opacity: 0;
+      pointer-events: none;
+      overflow: hidden;
+    }
+
+    /* Mobile Sidebar Scrim */
+    .sidebar-scrim {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(5, 7, 12, 0.65);
+      backdrop-filter: blur(4px);
+      -webkit-backdrop-filter: blur(4px);
+      z-index: 60;
+      opacity: 0;
+      transition: opacity 0.2s ease;
+    }
+
+    .sidebar-scrim.active {
+      display: block;
+      opacity: 1;
+    }
+
+    /* Sidebar */
+    .sidebar {
+      background-color: var(--bg-secondary);
+      border-right: 1px solid var(--border-color);
+      padding: 1.15rem 0.95rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1.15rem;
+      position: sticky;
+      top: 0;
+      height: 100vh;
+      height: 100dvh;
+      overflow-y: auto;
+      overflow-x: hidden;
+      transition: transform 0.26s cubic-bezier(0.16, 1, 0.3, 1), width 0.24s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.18s ease, padding 0.24s ease;
+      scrollbar-width: thin;
+      scrollbar-color: var(--border-hover) transparent;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0.15rem 0.3rem;
+      gap: 0.5rem;
+    }
+
+    .brand-logo {
+      display: flex;
+      align-items: center;
+      gap: 0.65rem;
+      font-weight: 800;
+      font-size: 1.12rem;
+      letter-spacing: -0.03em;
+      color: var(--text-primary);
+      white-space: nowrap;
+    }
+
+    .brand-icon {
+      width: 34px;
+      height: 34px;
+      border-radius: 9px;
+      background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #fff;
+      font-weight: 800;
+      font-size: 1rem;
+      box-shadow: 0 6px 16px rgba(59, 130, 246, 0.35);
+      flex-shrink: 0;
+    }
+
+    .sync-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      font-size: 0.67rem;
+      font-weight: 600;
+      padding: 0.2rem 0.52rem;
+      border-radius: 999px;
+      background: var(--emerald-soft);
+      color: var(--emerald);
+      border: 1px solid rgba(16, 185, 129, 0.25);
+      white-space: nowrap;
+    }
+
+    .sync-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background-color: var(--emerald);
+      box-shadow: 0 0 8px var(--emerald);
+    }
+
+    /* Collapsible Sidebar Sections */
+    .sidebar-section {
+      display: flex;
+      flex-direction: column;
+      gap: 0.35rem;
+    }
+
+    .section-header-btn {
+      width: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0.35rem 0.5rem;
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      font-size: 0.7rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      cursor: pointer;
+      border-radius: 6px;
+      font-family: inherit;
+      transition: color 0.15s ease, background-color 0.15s ease;
+    }
+
+    .section-header-btn:hover {
+      color: var(--text-primary);
+      background-color: var(--bg-elevated);
+    }
+
+    .section-chevron {
+      transition: transform 0.2s ease;
+    }
+
+    .sidebar-section.collapsed .section-chevron {
+      transform: rotate(-90deg);
+    }
+
+    .sidebar-section.collapsed .section-body {
+      display: none;
+    }
+
+    .section-body {
+      display: flex;
+      flex-direction: column;
+      gap: 0.4rem;
+    }
+
+    .nav-list {
+      display: flex;
+      flex-direction: column;
+      gap: 0.18rem;
+      list-style: none;
+    }
+
+    .nav-btn {
+      width: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0.52rem 0.65rem;
+      border-radius: 8px;
+      border: 1px solid transparent;
+      background: transparent;
+      color: var(--text-secondary);
+      font-size: 0.84rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      text-align: left;
+      font-family: inherit;
+    }
+
+    .nav-btn:hover {
+      background-color: var(--bg-elevated);
+      color: var(--text-primary);
+    }
+
+    .nav-btn.active {
+      background-color: var(--accent-soft);
+      color: var(--accent);
+      border-color: rgba(59, 130, 246, 0.25);
+      font-weight: 600;
+    }
+
+    .nav-btn-left {
+      display: flex;
+      align-items: center;
+      gap: 0.58rem;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .nav-count {
+      font-size: 0.71rem;
+      padding: 0.08rem 0.45rem;
+      border-radius: 999px;
+      background-color: var(--bg-elevated);
+      color: var(--text-muted);
+      font-family: 'JetBrains Mono', monospace;
+      font-weight: 600;
+    }
+
+    .nav-btn.active .nav-count {
+      background-color: var(--accent);
+      color: #fff;
+    }
+
+    /* Compact Searchable Tag Filter in Sidebar */
+    .tag-filter-box {
+      padding: 0 0.25rem;
+    }
+
+    .tag-search-input {
+      width: 100%;
+      padding: 0.44rem 0.65rem;
+      border-radius: 7px;
+      border: 1px solid var(--border-color);
+      background-color: var(--bg-primary);
+      color: var(--text-primary);
+      font-size: 0.78rem;
+      font-family: inherit;
+      outline: none;
+      transition: border-color 0.15s ease;
+    }
+
+    .tag-search-input:focus {
+      border-color: var(--accent);
+    }
+
+    .tag-cloud {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.32rem;
+      padding: 0.15rem 0.25rem;
+      max-height: 220px;
+      overflow-y: auto;
+      scrollbar-width: thin;
+    }
+
+    .tag-chip {
+      font-size: 0.72rem;
+      font-family: 'JetBrains Mono', monospace;
+      padding: 0.22rem 0.52rem;
+      border-radius: 6px;
+      background-color: var(--bg-elevated);
+      color: var(--text-secondary);
+      border: 1px solid var(--border-color);
+      cursor: pointer;
+      transition: all 0.15s ease;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.28rem;
+    }
+
+    .tag-chip:hover {
+      border-color: var(--accent);
+      color: var(--text-primary);
+    }
+
+    .tag-chip.active {
+      background-color: var(--accent);
+      color: #fff;
+      border-color: var(--accent);
+    }
+
+    .tag-chip-count {
+      opacity: 0.65;
+      font-size: 0.66rem;
+    }
+
+    .tag-more-btn {
+      margin: 0.15rem 0.25rem 0;
+      padding: 0.38rem 0.6rem;
+      border-radius: 7px;
+      border: 1px dashed var(--border-hover);
+      background: transparent;
+      color: var(--text-secondary);
+      font-size: 0.74rem;
+      font-weight: 600;
+      cursor: pointer;
+      font-family: inherit;
+      text-align: center;
+      transition: all 0.15s ease;
+    }
+
+    .tag-more-btn:hover {
+      color: var(--text-primary);
+      background-color: var(--bg-elevated);
+    }
+
+    .sidebar-footer {
+      margin-top: auto;
+      padding-top: 0.85rem;
+      border-top: 1px solid var(--border-color);
+      display: flex;
+      flex-direction: column;
+      gap: 0.42rem;
+    }
+
+    .external-links {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.38rem;
+    }
+
+    .ext-link {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.38rem;
+      font-size: 0.74rem;
+      font-weight: 600;
+      padding: 0.45rem 0.45rem;
+      border-radius: 8px;
+      background-color: var(--bg-elevated);
+      color: var(--text-secondary);
+      text-decoration: none;
+      border: 1px solid var(--border-color);
+      transition: all 0.15s ease;
+      white-space: nowrap;
+    }
+
+    .ext-link:hover {
+      color: var(--text-primary);
+      border-color: var(--border-hover);
+      background-color: var(--bg-card-hover);
+    }
+
+    /* Main Content Area */
+    .main-area {
+      display: flex;
+      flex-direction: column;
+      min-width: 0;
+    }
+
+    /* Topbar */
+    .topbar {
+      position: sticky;
+      top: 0;
+      z-index: 35;
+      background: var(--bg-glass);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border-bottom: 1px solid var(--border-color);
+      padding: 0.75rem 1.4rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.75rem;
+    }
+
+    .topbar-left {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      flex: 1;
+      min-width: 0;
+      max-width: 580px;
+    }
+
+    .search-wrapper {
+      flex: 1;
+      position: relative;
+      display: flex;
+      align-items: center;
+      min-width: 0;
+    }
+
+    .search-icon {
+      position: absolute;
+      left: 0.78rem;
+      color: var(--text-muted);
+      pointer-events: none;
+      display: flex;
+      align-items: center;
+    }
+
+    .search-input {
+      width: 100%;
+      padding: 0.54rem 2.4rem 0.54rem 2.25rem;
+      border-radius: 9px;
+      border: 1px solid var(--border-color);
+      background-color: var(--bg-secondary);
+      color: var(--text-primary);
+      font-size: 0.85rem;
+      font-family: inherit;
+      transition: all 0.15s ease;
+    }
+
+    .search-input:focus {
+      outline: none;
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px var(--accent-soft);
+    }
+
+    .search-kbd {
+      position: absolute;
+      right: 0.65rem;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.68rem;
+      padding: 0.1rem 0.4rem;
+      border-radius: 5px;
+      background-color: var(--bg-elevated);
+      color: var(--text-muted);
+      border: 1px solid var(--border-color);
+      pointer-events: none;
+    }
+
+    /* Quick URL Capture Bar */
+    .quick-capture-bar {
+      margin: 0.85rem 1.4rem 0.2rem;
+      padding: 0.48rem 0.55rem 0.48rem 0.9rem;
+      background: linear-gradient(90deg, var(--bg-secondary) 0%, var(--bg-card) 100%);
+      border: 1px solid var(--border-color);
+      border-radius: 11px;
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .quick-capture-input {
+      flex: 1;
+      border: none;
+      background: transparent;
+      color: var(--text-primary);
+      font-size: 0.86rem;
+      font-family: inherit;
+      outline: none;
+      min-width: 0;
+    }
+
+    .quick-capture-input::placeholder {
+      color: var(--text-muted);
+    }
+
+    .topbar-actions {
+      display: flex;
+      align-items: center;
+      gap: 0.45rem;
+      flex-shrink: 0;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.42rem;
+      padding: 0.48rem 0.82rem;
+      border-radius: 8px;
+      font-size: 0.81rem;
+      font-weight: 600;
+      font-family: inherit;
+      cursor: pointer;
+      border: 1px solid var(--border-color);
+      background-color: var(--bg-secondary);
+      color: var(--text-primary);
+      transition: all 0.15s ease;
+      white-space: nowrap;
+      min-height: 36px;
+    }
+
+    .btn:hover {
+      background-color: var(--bg-elevated);
+      border-color: var(--border-hover);
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+      border-color: #2563eb;
+      color: #ffffff;
+      box-shadow: 0 4px 12px rgba(37, 99, 235, 0.28);
+    }
+
+    .btn-primary:hover {
+      background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+      border-color: #1d4ed8;
+    }
+
+    .btn-icon {
+      padding: 0.48rem 0.58rem;
+    }
+
+    /* Sub-header Filter Bar & View Controls */
+    .subbar {
+      padding: 0.65rem 1.4rem 0.45rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.75rem;
+    }
+
+    .type-pills {
+      display: flex;
+      align-items: center;
+      gap: 0.38rem;
+      overflow-x: auto;
+      scrollbar-width: none;
+      -ms-overflow-style: none;
+      padding-bottom: 2px;
+      flex: 1;
+      min-width: 0;
+    }
+
+    .type-pills::-webkit-scrollbar {
+      display: none;
+    }
+
+    .pill-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.36rem;
+      padding: 0.38rem 0.78rem;
+      border-radius: 999px;
+      font-size: 0.78rem;
+      font-weight: 600;
+      border: 1px solid var(--border-color);
+      background-color: var(--bg-secondary);
+      color: var(--text-secondary);
+      cursor: pointer;
+      font-family: inherit;
+      transition: all 0.15s ease;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+
+    .pill-btn:hover {
+      color: var(--text-primary);
+      border-color: var(--border-hover);
+    }
+
+    .pill-btn.active {
+      background-color: var(--text-primary);
+      color: var(--bg-primary);
+      border-color: var(--text-primary);
+    }
+
+    .view-controls {
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+      flex-shrink: 0;
+    }
+
+    .sort-select {
+      padding: 0.4rem 0.65rem;
+      border-radius: 8px;
+      border: 1px solid var(--border-color);
+      background-color: var(--bg-secondary);
+      color: var(--text-secondary);
+      font-size: 0.78rem;
+      font-weight: 600;
+      font-family: inherit;
+      cursor: pointer;
+    }
+
+    /* Active Filter Pill Strip */
+    .active-filter-bar {
+      padding: 0 1.4rem 0.5rem;
+      display: none;
+      align-items: center;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+    }
+
+    .active-filter-bar.visible {
+      display: flex;
+    }
+
+    /* Stats Strip */
+    .stats-strip {
+      padding: 0.35rem 1.4rem 0.8rem;
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 0.75rem;
+    }
+
+    .stat-card {
+      background-color: var(--bg-secondary);
+      border: 1px solid var(--border-color);
+      border-radius: 11px;
+      padding: 0.72rem 0.95rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      transition: border-color 0.15s ease;
+      min-width: 0;
+    }
+
+    .stat-card:hover {
+      border-color: var(--border-hover);
+    }
+
+    .stat-label {
+      font-size: 0.68rem;
+      color: var(--text-muted);
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .stat-value {
+      font-size: 1.24rem;
+      font-weight: 800;
+      font-family: 'JetBrains Mono', monospace;
+      margin-top: 0.1rem;
+    }
+
+    .stat-icon-box {
+      width: 34px;
+      height: 34px;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background-color: var(--bg-elevated);
+      color: var(--text-secondary);
+      border: 1px solid var(--border-color);
+      flex-shrink: 0;
+    }
+
+    /* Bookmark Cards Grid */
+    .content-container {
+      padding: 0.2rem 1.4rem 3rem;
+      flex: 1;
+    }
+
+    .bookmarks-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(310px, 1fr));
+      gap: 1.05rem;
+    }
+
+    .bookmarks-grid.list-view {
+      grid-template-columns: 1fr;
+      gap: 0.75rem;
+    }
+
+    .bookmark-card {
+      background-color: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 13px;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      transition: transform 0.18s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.18s ease, box-shadow 0.18s ease;
+      cursor: pointer;
+      position: relative;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .bookmarks-grid.list-view .bookmark-card {
+      flex-direction: row;
+      align-items: stretch;
+    }
+
+    .bookmark-card:hover {
+      transform: translateY(-2px);
+      border-color: var(--border-hover);
+      background-color: var(--bg-card-hover);
+      box-shadow: var(--shadow-md);
+    }
+
+    /* Rich Preview Thumbnail Header */
+    .card-thumbnail {
+      position: relative;
+      width: 100%;
+      height: 156px;
+      background-color: var(--bg-secondary);
+      overflow: hidden;
+      border-bottom: 1px solid var(--border-color);
+      flex-shrink: 0;
+    }
+
+    .bookmarks-grid.list-view .card-thumbnail {
+      width: 210px;
+      height: auto;
+      min-height: 140px;
+      border-bottom: none;
+      border-right: 1px solid var(--border-color);
+    }
+
+    .card-thumb-img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+      transition: transform 0.35s ease;
+    }
+
+    .bookmark-card:hover .card-thumb-img {
+      transform: scale(1.03);
+    }
+
+    .card-thumb-overlay {
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(180deg, rgba(9, 11, 16, 0.62) 0%, rgba(9, 11, 16, 0.08) 45%, rgba(9, 11, 16, 0.82) 100%);
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      padding: 0.68rem 0.82rem;
+      pointer-events: none;
+    }
+
+    .thumb-top-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.5rem;
+    }
+
+    .thumb-domain-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.38rem;
+      padding: 0.2rem 0.54rem;
+      border-radius: 999px;
+      background: rgba(15, 23, 42, 0.82);
+      backdrop-filter: blur(8px);
+      color: #f8fafc;
+      font-size: 0.7rem;
+      font-family: 'JetBrains Mono', monospace;
+      font-weight: 500;
+      border: 1px solid rgba(255, 255, 255, 0.14);
+      max-width: 72%;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .thumb-favicon {
+      width: 14px;
+      height: 14px;
+      border-radius: 3px;
+      object-fit: contain;
+      flex-shrink: 0;
+    }
+
+    .thumb-bottom-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.4rem;
+    }
+
+    /* Card Body */
+    .card-body {
+      padding: 0.95rem 1rem 1rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.58rem;
+      flex: 1;
+      min-width: 0;
+    }
+
+    .badges-row {
+      display: flex;
+      align-items: center;
+      gap: 0.35rem;
+      flex-wrap: wrap;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.3rem;
+      font-size: 0.68rem;
+      font-weight: 700;
+      padding: 0.18rem 0.52rem;
+      border-radius: 6px;
+      white-space: nowrap;
+      letter-spacing: 0.01em;
+    }
+
+    .badge-folder {
+      background-color: rgba(15, 23, 42, 0.82);
+      color: #e2e8f0;
+      border: 1px solid rgba(255, 255, 255, 0.14);
+      backdrop-filter: blur(8px);
+    }
+
+    .badge-type-To-Read { background: var(--accent-soft); color: #60a5fa; border: 1px solid rgba(59, 130, 246, 0.3); }
+    .badge-type-To-Try { background: var(--emerald-soft); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.3); }
+    .badge-type-To-Study { background: var(--amber-soft); color: #fbbf24; border: 1px solid rgba(245, 158, 11, 0.3); }
+    .badge-type-Reference { background: var(--purple-soft); color: #c084fc; border: 1px solid rgba(139, 92, 246, 0.3); }
+
+    [data-theme="light"] .badge-type-To-Read { color: var(--accent); }
+    [data-theme="light"] .badge-type-To-Try { color: var(--emerald); }
+    [data-theme="light"] .badge-type-To-Study { color: var(--amber); }
+    [data-theme="light"] .badge-type-Reference { color: var(--purple); }
+
+    .card-title {
+      font-size: 0.96rem;
+      font-weight: 700;
+      color: var(--text-primary);
+      line-height: 1.38;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+
+    .card-summary {
+      font-size: 0.81rem;
+      color: var(--text-secondary);
+      display: -webkit-box;
+      -webkit-line-clamp: 3;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+      white-space: pre-line;
+      line-height: 1.5;
+    }
+
+    .card-snapshot-preview {
+      display: flex;
+      align-items: center;
+      gap: 0.45rem;
+      font-size: 0.72rem;
+      font-family: 'JetBrains Mono', monospace;
+      padding: 0.42rem 0.6rem;
+      border-radius: 7px;
+      background-color: var(--bg-secondary);
+      border: 1px solid var(--border-color);
+      border-left: 3px solid var(--accent);
+      color: var(--text-secondary);
+      overflow: hidden;
+    }
+
+    .card-snapshot-text {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      flex: 1;
+    }
+
+    .card-footer {
+      margin-top: auto;
+      padding-top: 0.56rem;
+      border-top: 1px solid var(--border-color);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.45rem;
+      flex-wrap: wrap;
+    }
+
+    .card-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.25rem;
+      align-items: center;
+    }
+
+    .card-tag {
+      font-size: 0.68rem;
+      font-family: 'JetBrains Mono', monospace;
+      color: var(--text-secondary);
+      background-color: var(--bg-secondary);
+      border: 1px solid var(--border-color);
+      padding: 0.1rem 0.42rem;
+      border-radius: 5px;
+    }
+
+    .card-tag-overflow {
+      font-size: 0.67rem;
+      font-family: 'JetBrains Mono', monospace;
+      color: var(--text-muted);
+      padding: 0.1rem 0.35rem;
+    }
+
+    .card-actions {
+      display: flex;
+      align-items: center;
+      gap: 0.35rem;
+    }
+
+    .status-toggle {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.32rem;
+      font-size: 0.7rem;
+      font-weight: 600;
+      padding: 0.24rem 0.56rem;
+      border-radius: 6px;
+      border: 1px solid var(--border-color);
+      background-color: var(--bg-secondary);
+      color: var(--text-secondary);
+      cursor: pointer;
+      font-family: inherit;
+      transition: all 0.15s ease;
+    }
+
+    .status-toggle.unread {
+      border-color: rgba(245, 158, 11, 0.4);
+      color: var(--amber);
+      background-color: var(--amber-soft);
+    }
+
+    .status-toggle.read {
+      border-color: rgba(16, 185, 129, 0.4);
+      color: var(--emerald);
+      background-color: var(--emerald-soft);
+    }
+
+    /* Empty State */
+    .empty-state {
+      text-align: center;
+      padding: 3.5rem 1.25rem;
+      background-color: var(--bg-secondary);
+      border: 1px dashed var(--border-hover);
+      border-radius: 16px;
+      max-width: 460px;
+      margin: 1.5rem auto;
+    }
+
+    .empty-state h3 {
+      font-size: 1.05rem;
+      margin-bottom: 0.4rem;
+    }
+
+    .empty-state p {
+      font-size: 0.84rem;
+      color: var(--text-secondary);
+      margin-bottom: 1.15rem;
+    }
+
+    /* Slide-over Reader Drawer & Modals */
+    .backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(5, 7, 12, 0.72);
+      backdrop-filter: blur(6px);
+      -webkit-backdrop-filter: blur(6px);
+      z-index: 80;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 1rem;
+    }
+
+    .backdrop.open {
+      display: flex;
+    }
+
+    .drawer-backdrop {
+      justify-content: flex-end;
+      padding: 0;
+    }
+
+    .reader-drawer {
+      width: 100%;
+      max-width: 620px;
+      height: 100vh;
+      height: 100dvh;
+      background-color: var(--bg-secondary);
+      border-left: 1px solid var(--border-color);
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      box-shadow: var(--shadow-lg);
+    }
+
+    .drawer-drag-pill {
+      display: none;
+      width: 40px;
+      height: 4px;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.35);
+      position: absolute;
+      top: 0.55rem;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 5;
+    }
+
+    .drawer-hero {
+      position: relative;
+      width: 100%;
+      height: 195px;
+      background-color: var(--bg-primary);
+      border-bottom: 1px solid var(--border-color);
+      flex-shrink: 0;
+      overflow: hidden;
+    }
+
+    .drawer-hero-img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+
+    .drawer-close-floating {
+      position: absolute;
+      top: 0.85rem;
+      right: 0.85rem;
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background: rgba(15, 23, 42, 0.84);
+      color: #fff;
+      border: 1px solid rgba(255, 255, 255, 0.22);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      backdrop-filter: blur(8px);
+    }
+
+    .drawer-content-inner {
+      padding: 1.35rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1.1rem;
+      padding-bottom: calc(2rem + var(--safe-bottom));
+    }
+
+    .modal-box {
+      width: 100%;
+      max-width: 660px;
+      max-height: 90vh;
+      max-height: 90dvh;
+      background-color: var(--bg-secondary);
+      border: 1px solid var(--border-color);
+      border-radius: 16px;
+      padding: 1.4rem;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 1.05rem;
+      box-shadow: var(--shadow-lg);
+    }
+
+    .drawer-header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 1rem;
+      padding-bottom: 0.9rem;
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    .drawer-section {
+      background-color: var(--bg-primary);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      padding: 0.95rem;
+    }
+
+    .drawer-section-label {
+      font-size: 0.7rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--text-muted);
+      margin-bottom: 0.5rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .drawer-body-text {
+      font-size: 0.89rem;
+      color: var(--text-primary);
+      white-space: pre-line;
+      line-height: 1.62;
+    }
+
+    .snapshot-code {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.8rem;
+      color: var(--text-primary);
+      white-space: pre-wrap;
+      word-break: break-word;
+      line-height: 1.55;
+    }
+
+    /* Form Controls */
+    .form-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.8rem;
+    }
+
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 0.32rem;
+    }
+
+    .form-group.full {
+      grid-column: 1 / -1;
+    }
+
+    .form-label {
+      font-size: 0.77rem;
+      font-weight: 600;
+      color: var(--text-secondary);
+    }
+
+    .form-input, .form-select, .form-textarea {
+      width: 100%;
+      padding: 0.58rem 0.75rem;
+      border-radius: 9px;
+      border: 1px solid var(--border-color);
+      background-color: var(--bg-primary);
+      color: var(--text-primary);
+      font-family: inherit;
+      font-size: 16px; /* Prevents iOS Safari auto-zoom on focus */
+    }
+
+    @media (min-width: 768px) {
+      .form-input, .form-select, .form-textarea {
+        font-size: 0.85rem;
+      }
+    }
+
+    .form-textarea {
+      min-height: 76px;
+      resize: vertical;
+    }
+
+    .form-input:focus, .form-select:focus, .form-textarea:focus {
+      outline: none;
+      border-color: var(--accent);
+    }
+
+    .code-block {
+      background-color: #070a12;
+      color: #e2e8f0;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.76rem;
+      padding: 0.95rem;
+      border-radius: 10px;
+      border: 1px solid var(--border-color);
+      overflow-x: auto;
+      white-space: pre;
+      max-height: 240px;
+    }
+
+    /* Mobile Bottom Navigation Bar (App-like Thumb Zone) */
+    .mobile-bottom-nav {
+      display: none;
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      z-index: 50;
+      background: var(--bg-glass);
+      backdrop-filter: blur(18px);
+      -webkit-backdrop-filter: blur(18px);
+      border-top: 1px solid var(--border-color);
+      padding: 0.4rem 0.5rem calc(0.4rem + var(--safe-bottom));
+      grid-template-columns: repeat(5, 1fr);
+      align-items: center;
+      box-shadow: 0 -8px 24px rgba(0, 0, 0, 0.35);
+    }
+
+    .mob-nav-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 0.2rem;
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      font-size: 0.66rem;
+      font-weight: 600;
+      font-family: inherit;
+      padding: 0.35rem 0.2rem;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: color 0.15s ease;
+    }
+
+    .mob-nav-item.active {
+      color: var(--accent);
+    }
+
+    .mob-nav-fab {
+      width: 42px;
+      height: 42px;
+      border-radius: 12px;
+      background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+      color: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 4px 14px rgba(37, 99, 235, 0.45);
+      margin: -2px auto 0;
+    }
+
+    /* Toast Notification */
+    .toast {
+      position: fixed;
+      bottom: 1.25rem;
+      right: 1.25rem;
+      background-color: var(--bg-elevated);
+      color: var(--text-primary);
+      border: 1px solid var(--accent);
+      padding: 0.72rem 1.1rem;
+      border-radius: 10px;
+      font-size: 0.83rem;
+      font-weight: 600;
+      box-shadow: var(--shadow-lg);
+      z-index: 100;
+      opacity: 0;
+      transform: translateY(10px);
+      pointer-events: none;
+      transition: all 0.2s ease;
+    }
+
+    .toast.show {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    /* =====================================================================
+       RESPONSIVE & MOBILE UI-UX BREAKPOINTS
+       ===================================================================== */
+    @media (max-width: 960px) {
+      .app-shell,
+      .app-shell.sidebar-collapsed {
+        grid-template-columns: 1fr;
+      }
+
+      .sidebar {
+        position: fixed;
+        inset: 0 auto 0 0;
+        width: 286px !important;
+        max-width: 84vw;
+        z-index: 70;
+        transform: translateX(-104%);
+        opacity: 1 !important;
+        pointer-events: auto !important;
+        padding: 1.15rem 0.95rem calc(1.5rem + var(--safe-bottom)) !important;
+        box-shadow: var(--shadow-lg);
+      }
+
+      .sidebar.mobile-open {
+        transform: translateX(0);
+      }
+
+      .topbar, .subbar, .stats-strip, .content-container, .active-filter-bar {
+        padding-left: 0.95rem;
+        padding-right: 0.95rem;
+      }
+
+      .quick-capture-bar {
+        margin-left: 0.95rem;
+        margin-right: 0.95rem;
+      }
+
+      .stats-strip {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 0.6rem;
+      }
+    }
+
+    @media (max-width: 640px) {
+      body {
+        padding-bottom: calc(68px + var(--safe-bottom));
+      }
+
+      .mobile-bottom-nav {
+        display: grid;
+      }
+
+      .topbar {
+        padding: 0.65rem 0.85rem;
+        gap: 0.5rem;
+      }
+
+      .topbar-left {
+        max-width: none;
+      }
+
+      .search-input {
+        font-size: 16px; /* Prevents iOS zoom */
+        padding: 0.48rem 0.75rem 0.48rem 2.15rem;
+      }
+
+      .search-kbd {
+        display: none;
+      }
+
+      /* Hide desktop text labels on topbar buttons so topbar fits on 1 clean row */
+      #quizMeBtn,
+      #openAddModalBtn {
+        display: none;
+      }
+
+      #syncSheetBtn span {
+        display: none;
+      }
+
+      #syncSheetBtn {
+        padding: 0.48rem 0.58rem;
+      }
+
+      .quick-capture-bar {
+        margin: 0.65rem 0.85rem 0.15rem;
+        padding: 0.4rem 0.45rem 0.4rem 0.75rem;
+        gap: 0.45rem;
+      }
+
+      .quick-capture-input {
+        font-size: 16px;
+      }
+
+      .subbar {
+        padding: 0.55rem 0.85rem 0.35rem;
+        gap: 0.5rem;
+      }
+
+      .sort-select {
+        padding: 0.36rem 0.5rem;
+        font-size: 0.74rem;
+      }
+
+      .stats-strip {
+        padding: 0.25rem 0.85rem 0.65rem;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 0.5rem;
+      }
+
+      .stat-card {
+        padding: 0.6rem 0.75rem;
+      }
+
+      .stat-value {
+        font-size: 1.1rem;
+      }
+
+      .stat-icon-box {
+        width: 30px;
+        height: 30px;
+      }
+
+      .content-container {
+        padding: 0.15rem 0.85rem 2rem;
+      }
+
+      .bookmarks-grid {
+        grid-template-columns: 1fr;
+        gap: 0.85rem;
+      }
+
+      .bookmarks-grid.list-view .bookmark-card {
+        flex-direction: column;
+      }
+
+      .bookmarks-grid.list-view .card-thumbnail {
+        width: 100%;
+        height: 145px;
+        border-right: none;
+        border-bottom: 1px solid var(--border-color);
+      }
+
+      .card-thumbnail {
+        height: 146px;
+      }
+
+      /* Bottom-Sheet Style Reader Drawer & Modals on Mobile */
+      .drawer-backdrop {
+        align-items: flex-end;
+      }
+
+      .reader-drawer {
+        max-width: 100%;
+        height: 92dvh;
+        border-left: none;
+        border-top: 1px solid var(--border-hover);
+        border-radius: 20px 20px 0 0;
+      }
+
+      .drawer-drag-pill {
+        display: block;
+      }
+
+      .drawer-hero {
+        height: 165px;
+      }
+
+      .drawer-content-inner {
+        padding: 1.1rem;
+      }
+
+      .backdrop {
+        padding: 0;
+        align-items: flex-end;
+      }
+
+      .modal-box {
+        max-width: 100%;
+        max-height: 92dvh;
+        border-radius: 20px 20px 0 0;
+        padding: 1.2rem 1.05rem calc(1.4rem + var(--safe-bottom));
+      }
+
+      .form-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .toast {
+        left: 0.85rem;
+        right: 0.85rem;
+        bottom: calc(76px + var(--safe-bottom));
+        text-align: center;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Mobile Off-Canvas Sidebar Backdrop Scrim -->
+  <div class="sidebar-scrim" id="sidebarScrim"></div>
+
+  <div class="app-shell" id="appShell">
+    <!-- Collapsible Left Sidebar -->
+    <aside class="sidebar" id="sidebar">
+      <div class="brand">
+        <div class="brand-logo">
+          <div class="brand-icon">
+            <svg class="icon icon-lg" style="stroke:#fff;" viewBox="0 0 24 24">
+              <path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20"/>
+            </svg>
+          </div>
+          <span>MindShelf</span>
+        </div>
+        <span class="sync-badge" id="syncStatusBadge" title="Connected to MindShelf Bookmarks Sheet">
+          <span class="sync-dot"></span>
+          <span id="syncStatusText">Sheet Ready</span>
+        </span>
+      </div>
+
+      <!-- Primary Library Views Section (Collapsible) -->
+      <div class="sidebar-section" id="secViews">
+        <button class="section-header-btn" type="button" data-toggle-section="secViews">
+          <span>Library Views</span>
+          <svg class="icon icon-sm section-chevron" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>
+        </button>
+        <div class="section-body">
+          <ul class="nav-list" id="statusNavList">
+            <li>
+              <button class="nav-btn active" data-filter-status="all" id="navAllBtn">
+                <span class="nav-btn-left">
+                  <svg class="icon" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/></svg>
+                  <span>All Bookmarks</span>
+                </span>
+                <span class="nav-count" id="countAll">0</span>
+              </button>
+            </li>
+            <li>
+              <button class="nav-btn" data-filter-status="Unread" id="navUnreadBtn">
+                <span class="nav-btn-left">
+                  <svg class="icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                  <span>Unread Queue</span>
+                </span>
+                <span class="nav-count" id="countUnread">0</span>
+              </button>
+            </li>
+            <li>
+              <button class="nav-btn" data-filter-status="Read" id="navReadBtn">
+                <span class="nav-btn-left">
+                  <svg class="icon" viewBox="0 0 24 24"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+                  <span>Completed / Read</span>
+                </span>
+                <span class="nav-count" id="countRead">0</span>
+              </button>
+            </li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- Folders Section (Collapsible) -->
+      <div class="sidebar-section" id="secFolders">
+        <button class="section-header-btn" type="button" data-toggle-section="secFolders">
+          <span>Folders</span>
+          <svg class="icon icon-sm section-chevron" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>
+        </button>
+        <div class="section-body">
+          <ul class="nav-list" id="folderNavList"></ul>
+        </div>
+      </div>
+
+      <!-- Controlled Tags Section (Collapsible + Searchable + Top-12 Capped) -->
+      <div class="sidebar-section" id="secTags">
+        <button class="section-header-btn" type="button" data-toggle-section="secTags">
+          <span>Tags (<span id="sidebarTagTotal">0</span>)</span>
+          <svg class="icon icon-sm section-chevron" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>
+        </button>
+        <div class="section-body">
+          <div class="tag-filter-box">
+            <input
+              type="text"
+              id="sidebarTagSearch"
+              class="tag-search-input"
+              placeholder="Filter tags (#ai, #tools...)"
+            />
+          </div>
+          <div class="tag-cloud" id="tagCloud"></div>
+          <button type="button" class="tag-more-btn" id="toggleAllTagsBtn" style="display:none;">
+            Show all tags
+          </button>
+        </div>
+      </div>
+
+      <!-- Footer Links -->
+      <div class="sidebar-footer">
+        <div class="external-links">
+          <a class="ext-link" href="https://docs.google.com/spreadsheets/" target="_blank" rel="noopener noreferrer">
+            <svg class="icon icon-sm" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="9" y1="21" x2="9" y2="9"/></svg>
+            <span>Google Sheet</span>
+          </a>
+          <a class="ext-link" href="https://gemini.google.com/" target="_blank" rel="noopener noreferrer">
+            <svg class="icon icon-sm" viewBox="0 0 24 24"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
+            <span>NotebookLM</span>
+          </a>
+        </div>
+        <button class="btn" id="exportJsonBtn" style="width:100%; justify-content:center;">
+          <svg class="icon icon-sm" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          <span>Export Backup (JSON)</span>
+        </button>
+        <button class="btn" id="openAppsScriptBtn" style="width:100%; justify-content:center;">
+          <svg class="icon icon-sm" viewBox="0 0 24 24"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
+          <span>1-Click Apps Script Setup</span>
+        </button>
+      </div>
+    </aside>
+
+    <!-- Main Area -->
+    <main class="main-area">
+      <!-- Sticky Topbar -->
+      <header class="topbar">
+        <div class="topbar-left">
+          <button class="btn btn-icon" id="mobileMenuBtn" title="Toggle Sidebar ( [ )" aria-label="Toggle Navigation">
+            <svg class="icon" viewBox="0 0 24 24">
+              <rect x="3" y="3" width="18" height="18" rx="2"/>
+              <line x1="9" y1="3" x2="9" y2="21"/>
+            </svg>
+          </button>
+
+          <div class="search-wrapper">
+            <span class="search-icon">
+              <svg class="icon icon-sm" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            </span>
+            <input
+              type="text"
+              id="searchInput"
+              class="search-input"
+              placeholder="Search titles, summaries, snapshots, #tags..."
+            />
+            <span class="search-kbd">/</span>
+          </div>
+        </div>
+
+        <div class="topbar-actions">
+          <button class="btn" id="quizMeBtn" title="Active Recall Quiz from Saved Bookmarks">
+            <svg class="icon icon-sm" viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+            <span>Quiz Me</span>
+          </button>
+          <button class="btn" id="syncSheetBtn" title="Sync from Google Sheet">
+            <svg class="icon icon-sm" viewBox="0 0 24 24"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+            <span>Sync</span>
+          </button>
+          <button class="btn btn-icon" id="themeToggleBtn" title="Toggle Dark/Light Theme" aria-label="Toggle Theme">
+            <svg class="icon" id="themeIconSvg" viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+          </button>
+          <button class="btn btn-primary" id="openAddModalBtn">+ Save Bookmark</button>
+        </div>
+      </header>
+
+      <!-- Instant Quick-Save URL Bar -->
+      <form class="quick-capture-bar" id="quickCaptureForm">
+        <svg class="icon" style="color: var(--accent);" viewBox="0 0 24 24"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+        <input
+          type="url"
+          id="quickUrlInput"
+          class="quick-capture-input"
+          placeholder="Paste URL to auto-generate preview card..."
+          required
+        />
+        <button type="submit" class="btn btn-primary" style="padding: 0.42rem 0.78rem;">Instant Save</button>
+      </form>
+
+      <!-- Subbar: Horizontally Scrollable Action Type Pills, Sort & View Toggle -->
+      <div class="subbar">
+        <div class="type-pills" id="typePillsContainer">
+          <button class="pill-btn active" data-type="all">All Types</button>
+          <button class="pill-btn" data-type="To Read">
+            <svg class="icon icon-sm" viewBox="0 0 24 24"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
+            <span>To Read</span>
+          </button>
+          <button class="pill-btn" data-type="To Try">
+            <svg class="icon icon-sm" viewBox="0 0 24 24"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
+            <span>To Try</span>
+          </button>
+          <button class="pill-btn" data-type="To Study">
+            <svg class="icon icon-sm" viewBox="0 0 24 24"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>
+            <span>To Study</span>
+          </button>
+          <button class="pill-btn" data-type="Reference">
+            <svg class="icon icon-sm" viewBox="0 0 24 24"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>
+            <span>Reference</span>
+          </button>
+        </div>
+
+        <div class="view-controls">
+          <select id="sortSelect" class="sort-select" aria-label="Sort Bookmarks">
+            <option value="newest">Newest</option>
+            <option value="oldest">Oldest</option>
+            <option value="title">A–Z</option>
+          </select>
+          <button class="btn btn-icon" id="gridViewBtn" title="Visual Card Grid View" aria-label="Grid View">
+            <svg class="icon icon-sm" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+          </button>
+          <button class="btn btn-icon" id="listViewBtn" title="Compact Horizontal List View" aria-label="List View">
+            <svg class="icon icon-sm" viewBox="0 0 24 24"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+          </button>
+        </div>
+      </div>
+
+      <!-- Active Tag/Folder Filter Banner -->
+      <div class="active-filter-bar" id="activeFilterBar">
+        <span style="font-size: 0.75rem; color: var(--text-muted); font-weight: 600;">Active Filter:</span>
+        <span id="activeFilterChip" class="tag-chip active"></span>
+        <button type="button" class="status-toggle" id="clearActiveFilterBtn">Clear Filter</button>
+      </div>
+
+      <!-- KPI Stats Strip (4-Col on Desktop, 2x2 Bento Grid on Mobile) -->
+      <section class="stats-strip">
+        <div class="stat-card">
+          <div>
+            <div class="stat-label">Total Saved</div>
+            <div class="stat-value" id="statTotal">0</div>
+          </div>
+          <div class="stat-icon-box">
+            <svg class="icon" viewBox="0 0 24 24"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div>
+            <div class="stat-label">Unread Queue</div>
+            <div class="stat-value" id="statUnread" style="color: var(--amber);">0</div>
+          </div>
+          <div class="stat-icon-box" style="color: var(--amber);">
+            <svg class="icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div>
+            <div class="stat-label">Snapshots</div>
+            <div class="stat-value" id="statSnapshots" style="color: var(--emerald);">100%</div>
+          </div>
+          <div class="stat-icon-box" style="color: var(--emerald);">
+            <svg class="icon" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div>
+            <div class="stat-label">Unique Tags</div>
+            <div class="stat-value" id="statTags" style="color: var(--purple);">0</div>
+          </div>
+          <div class="stat-icon-box" style="color: var(--purple);">
+            <svg class="icon" viewBox="0 0 24 24"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>
+          </div>
+        </div>
+      </section>
+
+      <!-- Cards Container -->
+      <section class="content-container">
+        <div class="bookmarks-grid" id="bookmarksGrid"></div>
+        <div class="empty-state" id="emptyState" style="display: none;">
+          <h3>No matching bookmarks found</h3>
+          <p>Try clearing your active search filter or paste a URL above to save a new item.</p>
+          <button class="btn btn-primary" id="resetFiltersBtn">Reset All Filters</button>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <!-- Native-Feel Mobile Bottom Navigation Bar -->
+  <nav class="mobile-bottom-nav" id="mobileBottomNav" aria-label="Mobile Navigation">
+    <button type="button" class="mob-nav-item active" id="mobNavAllBtn">
+      <svg class="icon" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/></svg>
+      <span>Library</span>
+    </button>
+    <button type="button" class="mob-nav-item" id="mobNavUnreadBtn">
+      <svg class="icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+      <span>Unread</span>
+    </button>
+    <button type="button" class="mob-nav-item" id="mobNavAddBtn" aria-label="Save Bookmark">
+      <div class="mob-nav-fab">
+        <svg class="icon icon-lg" style="stroke:#fff;" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      </div>
+    </button>
+    <button type="button" class="mob-nav-item" id="mobNavQuizBtn">
+      <svg class="icon" viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+      <span>Quiz Me</span>
+    </button>
+    <button type="button" class="mob-nav-item" id="mobNavFiltersBtn">
+      <svg class="icon" viewBox="0 0 24 24"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>
+      <span>Folders/Tags</span>
+    </button>
+  </nav>
+
+  <!-- Slide-Over / Bottom-Sheet Reader & Snapshot Drawer -->
+  <div class="backdrop drawer-backdrop" id="readerBackdrop">
+    <aside class="reader-drawer" id="readerDrawer">
+      <div class="drawer-hero">
+        <div class="drawer-drag-pill"></div>
+        <img id="drawerHeroImg" class="drawer-hero-img" src="" alt="Bookmark Cover Preview" />
+        <button class="drawer-close-floating" id="closeDrawerBtn" aria-label="Close Reader">
+          <svg class="icon" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </div>
+
+      <div class="drawer-content-inner">
+        <div class="drawer-header">
+          <div>
+            <div class="badges-row" id="drawerBadges" style="margin-bottom: 0.55rem;"></div>
+            <h2 id="drawerTitle" style="font-size: 1.18rem; font-weight: 800; line-height: 1.35;">Bookmark Title</h2>
+            <div id="drawerMeta" style="font-size: 0.77rem; color: var(--text-muted); margin-top: 0.35rem; font-family: 'JetBrains Mono', monospace;"></div>
+          </div>
+        </div>
+
+        <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+          <a id="drawerVisitUrl" href="https://github.com/karakeep-app/karakeep" target="_blank" rel="noopener noreferrer" class="btn btn-primary" style="text-decoration: none; flex: 1; justify-content: center;">
+            <svg class="icon icon-sm" viewBox="0 0 24 24"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+            <span>Open Original Webpage</span>
+          </a>
+          <button class="btn" id="drawerToggleStatusBtn">Mark as Read</button>
+          <button class="btn" id="drawerDeleteBtn" style="color: var(--rose);">
+            <svg class="icon icon-sm" viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+            <span>Delete</span>
+          </button>
+        </div>
+
+        <div class="drawer-section">
+          <div class="drawer-section-label">
+            <span>3-Bullet AI Synthesis</span>
+          </div>
+          <div class="drawer-body-text" id="drawerSummary"></div>
+        </div>
+
+        <div class="drawer-section" style="border-left: 3px solid var(--accent);">
+          <div class="drawer-section-label">
+            <span>Saved Snapshot (Anti-Link-Rot Archive)</span>
+            <button class="status-toggle" id="copySnapshotBtn">Copy</button>
+          </div>
+          <div class="snapshot-code" id="drawerSnapshot"></div>
+        </div>
+
+        <div class="drawer-section">
+          <div class="drawer-section-label">
+            <span>My Personal Context & Notes</span>
+          </div>
+          <textarea class="form-textarea" id="drawerNotesInput" placeholder="Add why you saved this or key action items..."></textarea>
+          <button class="btn" id="saveDrawerNotesBtn" style="margin-top: 0.55rem;">Save Note</button>
+        </div>
+
+        <div>
+          <div class="section-header-btn" style="padding:0; cursor:default;">Assigned Tags</div>
+          <div class="tag-cloud" id="drawerTags" style="padding:0; margin-top:0.4rem; max-height:none;"></div>
+        </div>
+      </div>
+    </aside>
+  </div>
+
+  <!-- Add / Save Bookmark Modal -->
+  <div class="backdrop" id="addModalBackdrop">
+    <div class="modal-box">
+      <div class="drawer-header">
+        <div>
+          <h2 style="font-size: 1.12rem; font-weight: 800;">Save to MindShelf Bookmarks</h2>
+          <p style="font-size: 0.79rem; color: var(--text-secondary);">Auto-generates preview cover thumbnails, checks duplicates, and reuses your tag taxonomy.</p>
+        </div>
+        <button class="btn btn-icon" id="closeAddModalBtn" aria-label="Close Modal">
+          <svg class="icon" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </div>
+
+      <form id="addBookmarkForm" class="form-grid">
+        <div class="form-group full">
+          <label class="form-label">URL *</label>
+          <input type="url" id="inputUrl" class="form-input" placeholder="https://github.com/..." required />
+        </div>
+
+        <div class="form-group full">
+          <label class="form-label">Title *</label>
+          <input type="text" id="inputTitle" class="form-input" placeholder="Clean, readable title" required />
+        </div>
+
+        <div class="form-group full">
+          <label class="form-label">Custom Thumbnail Image URL (Optional)</label>
+          <input type="url" id="inputThumb" class="form-input" placeholder="Leave blank for automatic OpenGraph / SVG cover card" />
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Folder</label>
+          <select id="inputFolder" class="form-select">
+            <option value="Tools">Tools</option>
+            <option value="Tech">Tech</option>
+            <option value="Learning">Learning</option>
+            <option value="Work">Work</option>
+            <option value="Finance">Finance</option>
+            <option value="Personal">Personal</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Action Type</label>
+          <select id="inputType" class="form-select">
+            <option value="To Read">To Read</option>
+            <option value="To Try">To Try</option>
+            <option value="To Study">To Study</option>
+            <option value="Reference">Reference</option>
+          </select>
+        </div>
+
+        <div class="form-group full">
+          <label class="form-label">Tags (click top tags below to reuse)</label>
+          <input type="text" id="inputTags" class="form-input" placeholder="#open-source #ai #tool" />
+          <div class="tag-cloud" id="modalExistingTags" style="padding: 0.35rem 0 0; max-height: 110px;"></div>
+        </div>
+
+        <div class="form-group full">
+          <label class="form-label">3-Bullet Summary</label>
+          <textarea id="inputSummary" class="form-textarea" placeholder="• Key takeaway 1&#10;• Key takeaway 2"></textarea>
+        </div>
+
+        <div class="form-group full">
+          <label class="form-label">Saved Snapshot (Key facts, commands, or figures to prevent link rot)</label>
+          <textarea id="inputSnapshot" class="form-textarea" placeholder="Important commands, specs, or quotes..."></textarea>
+        </div>
+
+        <div class="form-group full">
+          <label class="form-label">My Notes</label>
+          <input type="text" id="inputNotes" class="form-input" placeholder="Why I saved this..." />
+        </div>
+
+        <div class="form-group full" style="display:flex; flex-direction:row; justify-content:flex-end; gap:0.6rem; margin-top:0.5rem;">
+          <button type="button" class="btn" id="cancelAddModalBtn">Cancel</button>
+          <button type="submit" class="btn btn-primary">Save Bookmark</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Active Recall Quiz Modal -->
+  <div class="backdrop" id="quizModalBackdrop">
+    <div class="modal-box">
+      <div class="drawer-header">
+        <div>
+          <h2 style="font-size: 1.12rem; font-weight: 800;">Active Recall Flashcard</h2>
+          <p style="font-size: 0.79rem; color: var(--text-secondary);">Beat the "Read-It-Later Graveyard" — test your memory on your saved snapshots.</p>
+        </div>
+        <button class="btn btn-icon" id="closeQuizModalBtn" aria-label="Close Quiz">
+          <svg class="icon" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </div>
+
+      <div class="drawer-section" id="quizCardBox">
+        <div class="drawer-section-label">
+          <span id="quizCounter">Card 1</span>
+          <span id="quizFolderBadge" class="badge badge-folder">Folder</span>
+        </div>
+        <h3 id="quizQuestionTitle" style="font-size: 1.02rem; margin-bottom: 0.75rem;"></h3>
+        <div id="quizAnswerArea" style="display: none; border-top: 1px solid var(--border-color); padding-top: 0.85rem; margin-top: 0.5rem;">
+          <div class="drawer-body-text" id="quizSummaryText" style="margin-bottom: 0.65rem;"></div>
+          <div class="snapshot-code" id="quizSnapshotText"></div>
+        </div>
+      </div>
+
+      <div style="display: flex; justify-content: space-between; gap: 0.6rem; flex-wrap: wrap;">
+        <button class="btn" id="revealQuizBtn">Reveal Snapshot & Summary</button>
+        <div style="display: flex; gap: 0.5rem;">
+          <button class="btn" id="markQuizReadBtn">Mark Read</button>
+          <button class="btn btn-primary" id="nextQuizBtn">Next Bookmark →</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Google Apps Script Setup Modal -->
+  <div class="backdrop" id="appsScriptBackdrop">
+    <div class="modal-box">
+      <div class="drawer-header">
+        <div>
+          <h2 style="font-size: 1.12rem; font-weight: 800;">Deploy Permanently on Your Google Sheet (100% Free Forever)</h2>
+          <p style="font-size: 0.79rem; color: var(--text-secondary);">
+            This UI automatically detects Google Apps Script (`window.google.script.run`). Follow these 3 steps to update your deployment:
+          </p>
+        </div>
+        <button class="btn btn-icon" id="closeAppsScriptBtn" aria-label="Close Setup">
+          <svg class="icon" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </div>
+
+      <ol style="font-size: 0.84rem; color: var(--text-secondary); padding-left: 1.25rem; display: flex; flex-direction: column; gap: 0.4rem;">
+        <li>Open your <a href="https://docs.google.com/spreadsheets/" target="_blank" style="color: var(--accent);">MindShelf Bookmarks Google Sheet</a> and click <strong>Extensions → Apps Script</strong>.</li>
+        <li>Keep <code>Code.gs</code> as shown below, and replace the contents of <code>index.html</code> with this updated HTML file.</li>
+        <li>Click <strong>Deploy → Manage deployments → Edit (pencil icon) → New version → Deploy</strong>.</li>
+      </ol>
+
+      <div>
+        <div class="drawer-section-label">
+          <span>Code.gs (Backend Bridge for Your Sheet)</span>
+          <button class="status-toggle" id="copyCodeGsBtn">Copy Code.gs</button>
+        </div>
+        <pre class="code-block" id="codeGsContent">const SHEET_ID = 'YOUR_GOOGLE_SHEET_ID';
+
+function getTargetSpreadsheet_() {
+  if (SHEET_ID && SHEET_ID !== 'YOUR_GOOGLE_SHEET_ID') {
+    return SpreadsheetApp.openById(SHEET_ID);
+  }
+  return SpreadsheetApp.getActiveSpreadsheet();
+}
+
+function doGet() {
+  return HtmlService.createHtmlOutputFromFile('index')
+    .setTitle('MindShelf — AI Bookmark Library')
+    .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL)
+    .addMetaTag('viewport', 'width=device-width, initial-scale=1, viewport-fit=cover');
+}
+
+function getBookmarksFromSheet() {
+  const ss = getTargetSpreadsheet_();
+  const sheet = ss.getSheets()[0];
+  const rows = sheet.getDataRange().getDisplayValues();
+  if (rows.length <= 1) return [];
+  return rows.slice(1).map((r, idx) => ({
+    id: 'row-' + (idx + 2),
+    rowNumber: idx + 2,
+    date: r[0] || '',
+    title: r[1] || '',
+    url: r[2] || '',
+    folder: r[3] || 'Tools',
+    tags: (r[4] || '').split(/[,\s]+/).filter(Boolean),
+    type: r[5] || 'To Read',
+    summary: r[6] || '',
+    snapshot: r[7] || '',
+    notes: r[8] || '',
+    status: r[9] || 'Unread'
+  })).reverse();
+}
+
+function addBookmarkToSheet(item) {
+  const ss = getTargetSpreadsheet_();
+  const sheet = ss.getSheets()[0];
+  sheet.appendRow([
+    item.date,
+    item.title,
+    item.url,
+    item.folder,
+    (item.tags || []).join(', '),
+    item.type,
+    item.summary,
+    item.snapshot,
+    item.notes,
+    item.status || 'Unread'
+  ]);
+  return getBookmarksFromSheet();
+}
+
+function updateBookmarkInSheet(rowNumber, status, notes) {
+  const ss = getTargetSpreadsheet_();
+  const sheet = ss.getSheets()[0];
+  if (rowNumber && rowNumber >= 2) {
+    if (notes !== undefined) sheet.getRange(rowNumber, 9).setValue(notes);
+    if (status !== undefined) sheet.getRange(rowNumber, 10).setValue(status);
+  }
+  return true;
+}</pre>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast -->
+  <div class="toast" id="toast">Action completed</div>
+
+  <script>
+    const SHEET_ID = 'YOUR_GOOGLE_SHEET_ID';
+    const STORAGE_KEY = 'mindshelf_bookmarks_v2';
+    const TOP_TAGS_LIMIT = 12;
+
+    const INITIAL_BOOKMARKS = [
+      {
+        id: 'row-2',
+        rowNumber: 2,
+        date: '2026-11-12',
+        title: 'Karakeep — Self-Hostable Bookmark-Everything App with AI Tagging',
+        url: 'https://github.com/karakeep-app/karakeep',
+        folder: 'Tools',
+        tags: ['#bookmark-manager', '#open-source', '#ai', '#repo'],
+        type: 'Reference',
+        summary: '• Open-source self-hostable bookmark manager (formerly Hoarder) for saving links, notes, images, and PDFs.\n• Includes automatic LLM tagging, full-text Meilisearch, SingleFile page archiving, and yt-dlp video archiving.\n• Core inspiration for building the zero-cost MindShelf skill & web app inside Google Gemini.',
+        snapshot: 'Stack: Next.js (App Router), Drizzle ORM, Better Auth, tRPC, Puppeteer, Meilisearch, OpenAI/Ollama. License: AGPL-3.0. Supports CLI, MCP v2 Server, iOS/Android apps, and Chrome/Firefox/Safari extensions.',
+        notes: 'Inspiration repo for MindShelf skill — solved tag sprawl & graveyard issues.',
+        status: 'Unread'
+      },
+      {
+        id: 'row-3',
+        rowNumber: 3,
+        date: '2026-11-12',
+        title: 'Google Gemini API — OpenAI Compatibility & Models Guide',
+        url: 'https://ai.google.dev/gemini-api/docs/openai',
+        folder: 'Tech',
+        tags: ['#ai', '#documentation', '#api', '#article'],
+        type: 'Reference',
+        summary: '• Official documentation for calling Google Gemini models using OpenAI-compatible SDKs and REST endpoints.\n• Enables plugging Gemini models directly into open-source tools and agent workflows.\n• Base endpoint: generativelanguage.googleapis.com/v1beta/openai/',
+        snapshot: 'Base URL: https://generativelanguage.googleapis.com/v1beta/openai/ | Header: Authorization: Bearer GEMINI_API_KEY | Supports chat completions, embeddings, and structured outputs.',
+        notes: 'Reference for zero-cost AI integrations.',
+        status: 'Unread'
+      },
+      {
+        id: 'row-4',
+        rowNumber: 4,
+        date: '2026-11-12',
+        title: 'Solving the Read-It-Later Graveyard & AI Tag Sprawl (Reddit r/selfhosted Synthesis)',
+        url: 'https://www.reddit.com/r/selfhosted/comments/1qe2uvl/karakeep_ai_auto_tagging_problems/',
+        folder: 'Learning',
+        tags: ['#productivity', '#bookmark-manager', '#ai', '#thread'],
+        type: 'To Study',
+        summary: '• Community analysis showing why 90% of saved bookmarks turn into an unread graveyard when apps only store titles.\n• Highlights the need for 80% semantic tag reuse instead of generating noisy one-off AI tags.\n• Recommends storing key facts directly in snapshots to survive future link rot (404s).',
+        snapshot: 'Core fixes implemented in MindShelf: 1) Controlled Tag Reuse first, 2) Action-Type classification (To Read, To Try, To Study, Reference), 3) Verbatim Key Snapshot column, 4) Active Recall Quiz mode.',
+        notes: 'Key UX research from Reddit r/selfhosted and r/PKMS.',
+        status: 'Read'
+      }
+    ];
+
+    const FOLDER_SVG = `<svg class="icon icon-sm" viewBox="0 0 24 24"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>`;
+    const SHIELD_SVG = `<svg class="icon icon-sm" style="color:var(--accent);" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>`;
+
+    let state = {
+      bookmarks: [],
+      filterStatus: 'all',
+      filterFolder: 'all',
+      filterType: 'all',
+      filterTag: null,
+      searchQuery: '',
+      sidebarTagQuery: '',
+      showAllTags: false,
+      sortBy: 'newest',
+      viewMode: 'grid',
+      activeDrawerId: null,
+      quizIndex: 0
+    };
+
+    function showToast(msg) {
+      const t = document.getElementById('toast');
+      t.textContent = msg;
+      t.classList.add('show');
+      setTimeout(() => t.classList.remove('show'), 2600);
+    }
+
+    function closeMobileSidebar() {
+      document.getElementById('sidebar').classList.remove('mobile-open');
+      document.getElementById('sidebarScrim').classList.remove('active');
+    }
+
+    function openMobileSidebar() {
+      document.getElementById('sidebar').classList.add('mobile-open');
+      document.getElementById('sidebarScrim').classList.add('active');
+    }
+
+    function getDomain(url) {
+      try {
+        const u = new URL(url);
+        return u.hostname.replace(/^www\./, '');
+      } catch (e) {
+        return 'bookmark.local';
+      }
+    }
+
+    function generateSvgThumbnailDataUri(item) {
+      const domain = getDomain(item.url);
+      const palettes = {
+        'Tools': ['#0b132b', '#1e3a8a', '#3b82f6'],
+        'Tech': ['#090d16', '#2e1065', '#8b5cf6'],
+        'Learning': ['#061914', '#064e3b', '#10b981'],
+        'Work': ['#1c150c', '#78350f', '#f59e0b'],
+        'Finance': ['#07191c', '#134e4a', '#14b8a6'],
+        'Personal': ['#1a0b12', '#4c0519', '#f43f5e']
+      };
+      const pal = palettes[item.folder] || palettes['Tools'];
+      const cleanTitle = (item.title || 'Saved Bookmark').slice(0, 42).replace(/[<>&"']/g, '');
+      const cleanTag = ((item.tags && item.tags[0]) ? item.tags[0] : '#mindshelf').replace(/[<>&"']/g, '');
+
+      const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="640" height="340" viewBox="0 0 640 340">
+        <defs>
+          <linearGradient id="g" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stop-color="${pal[0]}"/>
+            <stop offset="55%" stop-color="${pal[1]}"/>
+            <stop offset="100%" stop-color="${pal[2]}"/>
+          </linearGradient>
+          <pattern id="grid" width="32" height="32" patternUnits="userSpaceOnUse">
+            <path d="M 32 0 L 0 0 0 32" fill="none" stroke="rgba(255,255,255,0.05)" stroke-width="1"/>
+          </pattern>
+        </defs>
+        <rect width="640" height="340" fill="url(#g)"/>
+        <rect width="640" height="340" fill="url(#grid)"/>
+        <circle cx="540" cy="70" r="120" fill="${pal[2]}" opacity="0.16"/>
+        <circle cx="110" cy="290" r="100" fill="${pal[2]}" opacity="0.12"/>
+        <rect x="36" y="132" width="568" height="1" fill="rgba(255,255,255,0.12)"/>
+        <text x="36" y="110" fill="rgba(255,255,255,0.68)" font-family="monospace" font-size="15" font-weight="600">${domain.toUpperCase()} • ${cleanTag}</text>
+        <text x="36" y="174" fill="#ffffff" font-family="sans-serif" font-size="24" font-weight="700">${cleanTitle}</text>
+      </svg>`;
+      return 'data:image/svg+xml;utf8,' + encodeURIComponent(svg);
+    }
+
+    function getBookmarkThumbnail(item) {
+      if (item.customThumb && item.customThumb.trim() !== '') {
+        return item.customThumb.trim();
+      }
+      try {
+        const u = new URL(item.url);
+        const host = u.hostname.replace(/^www\./, '');
+        if (host === 'github.com') {
+          const parts = u.pathname.split('/').filter(Boolean);
+          if (parts.length >= 2) {
+            return `https://opengraph.githubassets.com/1/${parts[0]}/${parts[1]}`;
+          }
+        }
+        if (host === 'youtube.com' || host === 'youtu.be') {
+          let vid = u.searchParams.get('v');
+          if (!vid && host === 'youtu.be') {
+            vid = u.pathname.slice(1);
+          }
+          if (vid) {
+            return `https://img.youtube.com/vi/${vid}/hqdefault.jpg`;
+          }
+        }
+      } catch (e) {}
+
+      return generateSvgThumbnailDataUri(item);
+    }
+
+    function getFaviconUrl(url) {
+      const domain = getDomain(url);
+      return `https://www.google.com/s2/favicons?domain=${encodeURIComponent(domain)}&sz=32`;
+    }
+
+    function loadLocalState() {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (raw) {
+          const parsed = JSON.parse(raw);
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            state.bookmarks = parsed;
+            return;
+          }
+        }
+      } catch (e) {}
+      state.bookmarks = [...INITIAL_BOOKMARKS];
+    }
+
+    function saveLocalState() {
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(state.bookmarks));
+      } catch (e) {}
+    }
+
+    function syncFromBackend() {
+      const badgeText = document.getElementById('syncStatusText');
+      badgeText.textContent = 'Syncing...';
+
+      if (window.google && window.google.script && window.google.script.run) {
+        window.google.script.run
+          .withSuccessHandler((rows) => {
+            if (Array.isArray(rows) && rows.length > 0) {
+              state.bookmarks = rows;
+              saveLocalState();
+              renderAll();
+            }
+            badgeText.textContent = 'Live Sheet Sync';
+            showToast('Synced live with MindShelf Bookmarks Sheet');
+          })
+          .withFailureHandler(() => {
+            badgeText.textContent = 'Local Cache';
+          })
+          .getBookmarksFromSheet();
+        return;
+      }
+
+      fetch(`https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json`)
+        .then(r => r.text())
+        .then(txt => {
+          const jsonStr = txt.substring(txt.indexOf('{'), txt.lastIndexOf('}') + 1);
+          const data = JSON.parse(jsonStr);
+          if (data && data.table && data.table.rows && data.table.rows.length > 0) {
+            const fetched = [];
+            data.table.rows.forEach((r, idx) => {
+              const c = r.c || [];
+              const val = (i) => (c[i] && (c[i].f || c[i].v)) ? String(c[i].f || c[i].v) : '';
+              const title = val(1);
+              if (!title || title.toLowerCase() === 'title') return;
+              fetched.push({
+                id: 'row-' + (idx + 2),
+                rowNumber: idx + 2,
+                date: val(0) || '2026-11-12',
+                title: title,
+                url: val(2) || '#',
+                folder: val(3) || 'Tools',
+                tags: val(4).split(/[,\s]+/).filter(Boolean),
+                type: val(5) || 'To Read',
+                summary: val(6) || '',
+                snapshot: val(7) || '',
+                notes: val(8) || '',
+                status: val(9) || 'Unread'
+              });
+            });
+            if (fetched.length > 0) {
+              state.bookmarks = fetched.reverse();
+              saveLocalState();
+              renderAll();
+              badgeText.textContent = 'Sheet Synced';
+              showToast('Synced from MindShelf Bookmarks Sheet');
+              return;
+            }
+          }
+          badgeText.textContent = 'Sheet Ready';
+          showToast('Synced with local MindShelf workspace');
+        })
+        .catch(() => {
+          badgeText.textContent = 'Sheet Ready';
+          showToast('Using MindShelf local state');
+        });
+    }
+
+    function getAllCanonicalTags() {
+      const counts = {};
+      state.bookmarks.forEach(b => {
+        (b.tags || []).forEach(t => {
+          const clean = t.startsWith('#') ? t.toLowerCase() : '#' + t.toLowerCase();
+          counts[clean] = (counts[clean] || 0) + 1;
+        });
+      });
+      return Object.entries(counts).sort((a, b) => b[1] - a[1]);
+    }
+
+    function getFilteredBookmarks() {
+      const list = state.bookmarks.filter(b => {
+        if (state.filterStatus !== 'all' && b.status !== state.filterStatus) return false;
+        if (state.filterFolder !== 'all' && b.folder !== state.filterFolder) return false;
+        if (state.filterType !== 'all' && b.type !== state.filterType) return false;
+        if (state.filterTag) {
+          const normalized = (b.tags || []).map(t => t.startsWith('#') ? t.toLowerCase() : '#' + t.toLowerCase());
+          if (!normalized.includes(state.filterTag.toLowerCase())) return false;
+        }
+        if (state.searchQuery.trim() !== '') {
+          const q = state.searchQuery.toLowerCase();
+          const hay = [
+            b.title,
+            b.url,
+            b.folder,
+            b.type,
+            b.summary,
+            b.snapshot,
+            b.notes,
+            ...(b.tags || [])
+          ].join(' ').toLowerCase();
+          if (!hay.includes(q)) return false;
+        }
+        return true;
+      });
+
+      if (state.sortBy === 'title') {
+        list.sort((a, b) => (a.title || '').localeCompare(b.title || ''));
+      } else if (state.sortBy === 'oldest') {
+        list.reverse();
+      }
+      return list;
+    }
+
+    function renderSidebarAndStats() {
+      const total = state.bookmarks.length;
+      const unread = state.bookmarks.filter(b => b.status === 'Unread').length;
+      const read = state.bookmarks.filter(b => b.status === 'Read').length;
+      const allTags = getAllCanonicalTags();
+
+      document.getElementById('countAll').textContent = total;
+      document.getElementById('countUnread').textContent = unread;
+      document.getElementById('countRead').textContent = read;
+
+      document.getElementById('statTotal').textContent = total;
+      document.getElementById('statUnread').textContent = unread;
+      document.getElementById('statTags').textContent = allTags.length;
+      document.getElementById('sidebarTagTotal').textContent = allTags.length;
+
+      // Active filter indicator bar
+      const filterBar = document.getElementById('activeFilterBar');
+      const filterChip = document.getElementById('activeFilterChip');
+      if (state.filterTag || state.filterFolder !== 'all') {
+        filterBar.classList.add('visible');
+        filterChip.textContent = state.filterTag ? `Tag: ${state.filterTag}` : `Folder: ${state.filterFolder}`;
+      } else {
+        filterBar.classList.remove('visible');
+      }
+
+      // Sync Mobile Bottom Nav Active State
+      document.getElementById('mobNavAllBtn').classList.toggle('active', state.filterStatus === 'all' && !state.filterTag && state.filterFolder === 'all');
+      document.getElementById('mobNavUnreadBtn').classList.toggle('active', state.filterStatus === 'Unread');
+      document.getElementById('mobNavFiltersBtn').classList.toggle('active', Boolean(state.filterTag || state.filterFolder !== 'all'));
+
+      // Folders
+      const folders = ['Tools', 'Tech', 'Learning', 'Work', 'Finance', 'Personal'];
+      const folderCounts = {};
+      state.bookmarks.forEach(b => {
+        const f = b.folder || 'Tools';
+        folderCounts[f] = (folderCounts[f] || 0) + 1;
+        if (!folders.includes(f)) folders.push(f);
+      });
+
+      const folderListEl = document.getElementById('folderNavList');
+      folderListEl.innerHTML = '';
+
+      const allFolderLi = document.createElement('li');
+      const allFolderBtn = document.createElement('button');
+      allFolderBtn.className = 'nav-btn' + (state.filterFolder === 'all' ? ' active' : '');
+      allFolderBtn.innerHTML = `<span class="nav-btn-left">${FOLDER_SVG}<span>All Folders</span></span><span class="nav-count">${total}</span>`;
+      allFolderBtn.addEventListener('click', () => {
+        state.filterFolder = 'all';
+        closeMobileSidebar();
+        renderAll();
+      });
+      allFolderLi.appendChild(allFolderBtn);
+      folderListEl.appendChild(allFolderLi);
+
+      folders.forEach(folder => {
+        const count = folderCounts[folder] || 0;
+        const li = document.createElement('li');
+        const btn = document.createElement('button');
+        btn.className = 'nav-btn' + (state.filterFolder === folder ? ' active' : '');
+        btn.innerHTML = `<span class="nav-btn-left">${FOLDER_SVG}<span>${escapeHtml(folder)}</span></span><span class="nav-count">${count}</span>`;
+        btn.addEventListener('click', () => {
+          state.filterFolder = state.filterFolder === folder ? 'all' : folder;
+          closeMobileSidebar();
+          renderAll();
+        });
+        li.appendChild(btn);
+        folderListEl.appendChild(li);
+      });
+
+      // Controlled Tag Cloud
+      const tagCloudEl = document.getElementById('tagCloud');
+      const toggleAllTagsBtn = document.getElementById('toggleAllTagsBtn');
+      tagCloudEl.innerHTML = '';
+
+      const q = state.sidebarTagQuery.trim().toLowerCase();
+      const matchingTags = q
+        ? allTags.filter(([t]) => t.toLowerCase().includes(q))
+        : allTags;
+
+      const visibleTags = (state.showAllTags || q !== '')
+        ? matchingTags
+        : matchingTags.slice(0, TOP_TAGS_LIMIT);
+
+      visibleTags.forEach(([tag, count]) => {
+        const chip = document.createElement('button');
+        chip.className = 'tag-chip' + (state.filterTag === tag ? ' active' : '');
+        chip.innerHTML = `<span>${escapeHtml(tag)}</span><span class="tag-chip-count">${count}</span>`;
+        chip.addEventListener('click', () => {
+          state.filterTag = state.filterTag === tag ? null : tag;
+          closeMobileSidebar();
+          renderAll();
+        });
+        tagCloudEl.appendChild(chip);
+      });
+
+      if (matchingTags.length > TOP_TAGS_LIMIT && q === '') {
+        toggleAllTagsBtn.style.display = 'block';
+        toggleAllTagsBtn.textContent = state.showAllTags
+          ? `Show Top ${TOP_TAGS_LIMIT} Tags Only`
+          : `Show All ${matchingTags.length} Tags (+${matchingTags.length - TOP_TAGS_LIMIT} more)`;
+      } else {
+        toggleAllTagsBtn.style.display = 'none';
+      }
+
+      // Modal Tag Reuse (Top 16 tags)
+      const modalTagsEl = document.getElementById('modalExistingTags');
+      if (modalTagsEl) {
+        modalTagsEl.innerHTML = '';
+        allTags.slice(0, 16).forEach(([tag]) => {
+          const chip = document.createElement('button');
+          chip.type = 'button';
+          chip.className = 'tag-chip';
+          chip.textContent = tag;
+          chip.addEventListener('click', () => {
+            const inp = document.getElementById('inputTags');
+            if (!inp.value.includes(tag)) {
+              inp.value = (inp.value.trim() + ' ' + tag).trim();
+            }
+          });
+          modalTagsEl.appendChild(chip);
+        });
+      }
+    }
+
+    function escapeHtml(str) {
+      return String(str || '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;');
+    }
+
+    function renderCards() {
+      const grid = document.getElementById('bookmarksGrid');
+      const empty = document.getElementById('emptyState');
+      const filtered = getFilteredBookmarks();
+
+      grid.className = 'bookmarks-grid' + (state.viewMode === 'list' ? ' list-view' : '');
+      grid.innerHTML = '';
+
+      if (filtered.length === 0) {
+        empty.style.display = 'block';
+        return;
+      }
+      empty.style.display = 'none';
+
+      filtered.forEach(item => {
+        const card = document.createElement('article');
+        card.className = 'bookmark-card';
+        const domain = getDomain(item.url);
+        const typeKey = (item.type || 'To Read').replace(/\s+/g, '-');
+        const thumbUrl = getBookmarkThumbnail(item);
+        const fallbackSvg = generateSvgThumbnailDataUri(item);
+        const faviconUrl = getFaviconUrl(item.url);
+
+        const itemTags = item.tags || [];
+        const visibleCardTags = itemTags.slice(0, 3);
+        const extraTagsCount = Math.max(0, itemTags.length - 3);
+
+        card.innerHTML = `
+          <div class="card-thumbnail">
+            <img class="card-thumb-img" src="${escapeHtml(thumbUrl)}" alt="${escapeHtml(item.title)}" loading="lazy" />
+            <div class="card-thumb-overlay">
+              <div class="thumb-top-bar">
+                <span class="thumb-domain-pill">
+                  <img class="thumb-favicon" src="${escapeHtml(faviconUrl)}" alt="" />
+                  <span>${escapeHtml(domain)}</span>
+                </span>
+                <span class="badge badge-folder">${escapeHtml(item.folder || 'Tools')}</span>
+              </div>
+              <div class="thumb-bottom-bar">
+                <span class="badge badge-type-${typeKey}">${escapeHtml(item.type || 'To Read')}</span>
+                <span style="font-size: 0.7rem; color: rgba(255,255,255,0.82); font-family: 'JetBrains Mono', monospace;">${escapeHtml(item.date || '')}</span>
+              </div>
+            </div>
+          </div>
+          <div class="card-body">
+            <h3 class="card-title">${escapeHtml(item.title)}</h3>
+            <div class="card-summary">${escapeHtml(item.summary || '')}</div>
+            ${item.snapshot ? `
+              <div class="card-snapshot-preview">
+                ${SHIELD_SVG}
+                <span class="card-snapshot-text">${escapeHtml(item.snapshot)}</span>
+              </div>
+            ` : ''}
+            <div class="card-footer">
+              <div class="card-tags">
+                ${visibleCardTags.map(t => `<span class="card-tag">${escapeHtml(t)}</span>`).join('')}
+                ${extraTagsCount > 0 ? `<span class="card-tag-overflow">+${extraTagsCount}</span>` : ''}
+              </div>
+              <div class="card-actions">
+                <button class="status-toggle ${item.status === 'Unread' ? 'unread' : 'read'}" data-action="toggle-status">
+                  ${item.status === 'Unread' ? '● Unread' : '✓ Read'}
+                </button>
+              </div>
+            </div>
+          </div>
+        `;
+
+        const imgEl = card.querySelector('.card-thumb-img');
+        imgEl.addEventListener('error', () => {
+          if (imgEl.src !== fallbackSvg) {
+            imgEl.src = fallbackSvg;
+          }
+        });
+
+        card.addEventListener('click', (e) => {
+          const toggleBtn = e.target.closest('[data-action="toggle-status"]');
+          if (toggleBtn) {
+            e.stopPropagation();
+            toggleBookmarkStatus(item.id);
+            return;
+          }
+          openReaderDrawer(item.id);
+        });
+
+        grid.appendChild(card);
+      });
+    }
+
+    function toggleBookmarkStatus(id) {
+      const bm = state.bookmarks.find(b => b.id === id);
+      if (!bm) return;
+      bm.status = bm.status === 'Unread' ? 'Read' : 'Unread';
+      saveLocalState();
+      renderAll();
+
+      if (window.google && window.google.script && window.google.script.run && bm.rowNumber) {
+        window.google.script.run.updateBookmarkInSheet(bm.rowNumber, bm.status, bm.notes);
+      }
+      showToast(`Marked "${bm.title.slice(0, 28)}..." as ${bm.status}`);
+    }
+
+    function openReaderDrawer(id) {
+      const bm = state.bookmarks.find(b => b.id === id);
+      if (!bm) return;
+      state.activeDrawerId = id;
+
+      const heroImg = document.getElementById('drawerHeroImg');
+      const fallbackSvg = generateSvgThumbnailDataUri(bm);
+      heroImg.src = getBookmarkThumbnail(bm);
+      heroImg.onerror = () => { heroImg.src = fallbackSvg; };
+
+      const typeKey = (bm.type || 'To Read').replace(/\s+/g, '-');
+      document.getElementById('drawerBadges').innerHTML = `
+        <span class="badge badge-folder">${FOLDER_SVG}<span>${escapeHtml(bm.folder)}</span></span>
+        <span class="badge badge-type-${typeKey}">${escapeHtml(bm.type)}</span>
+        <span class="badge ${bm.status === 'Unread' ? 'badge-type-To-Study' : 'badge-type-To-Try'}">${escapeHtml(bm.status)}</span>
+      `;
+      document.getElementById('drawerTitle').textContent = bm.title;
+      document.getElementById('drawerMeta').textContent = `${getDomain(bm.url)} • Saved ${bm.date}`;
+      document.getElementById('drawerVisitUrl').href = bm.url;
+      document.getElementById('drawerSummary').textContent = bm.summary || 'No summary provided.';
+      document.getElementById('drawerSnapshot').textContent = bm.snapshot || 'No snapshot archived.';
+      document.getElementById('drawerNotesInput').value = bm.notes || '';
+      document.getElementById('drawerToggleStatusBtn').textContent = bm.status === 'Unread' ? 'Mark as Read' : 'Mark as Unread';
+
+      const drawerTags = document.getElementById('drawerTags');
+      drawerTags.innerHTML = '';
+      (bm.tags || []).forEach(t => {
+        const span = document.createElement('span');
+        span.className = 'tag-chip';
+        span.textContent = t;
+        drawerTags.appendChild(span);
+      });
+
+      document.getElementById('readerBackdrop').classList.add('open');
+    }
+
+    function renderAll() {
+      document.querySelectorAll('#statusNavList .nav-btn').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.filterStatus === state.filterStatus);
+      });
+      document.querySelectorAll('#typePillsContainer .pill-btn').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.type === state.filterType);
+      });
+
+      renderSidebarAndStats();
+      renderCards();
+    }
+
+    function inferBookmarkFromUrl(rawUrl) {
+      let domain = getDomain(rawUrl);
+      let title = domain;
+      let folder = 'Tools';
+      let type = 'To Read';
+      let tags = ['#bookmark'];
+
+      try {
+        const u = new URL(rawUrl);
+        const parts = u.pathname.split('/').filter(Boolean);
+        if (domain === 'github.com' && parts.length >= 2) {
+          title = `${parts[0]}/${parts[1]} — GitHub Repository`;
+          folder = 'Tools';
+          type = 'To Try';
+          tags = ['#open-source', '#repo', '#tool'];
+        } else if (domain.includes('youtube.com') || domain === 'youtu.be') {
+          title = `YouTube Video (${domain})`;
+          folder = 'Learning';
+          type = 'To Study';
+          tags = ['#video', '#tutorial'];
+        } else if (domain.includes('reddit.com')) {
+          title = parts.length >= 4 ? parts[3].replace(/_/g, ' ') : `Reddit Thread on ${domain}`;
+          folder = 'Learning';
+          type = 'To Read';
+          tags = ['#thread', '#community'];
+        } else if (parts.length > 0) {
+          const slug = parts[parts.length - 1].replace(/[-_]/g, ' ').replace(/\.\w+$/, '');
+          if (slug.length > 2) {
+            title = slug.charAt(0).toUpperCase() + slug.slice(1) + ` (${domain})`;
+          }
+        }
+      } catch (e) {}
+
+      return {
+        id: 'bm-' + Date.now(),
+        date: new Date().toISOString().slice(0, 10),
+        title,
+        url: rawUrl,
+        folder,
+        tags,
+        type,
+        summary: `• Saved via MindShelf Instant Capture from ${domain}.\n• Click to open the reader drawer and add takeaways or ask Gemini to enrich this link.`,
+        snapshot: `Canonical URL: ${rawUrl} | Domain: ${domain} | Captured: ${new Date().toISOString().slice(0, 10)}`,
+        notes: '',
+        status: 'Unread'
+      };
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      loadLocalState();
+      renderAll();
+      if (window.google && window.google.script && window.google.script.run) {
+        syncFromBackend();
+      }
+
+      const appShell = document.getElementById('appShell');
+      const sidebar = document.getElementById('sidebar');
+      const sidebarScrim = document.getElementById('sidebarScrim');
+
+      document.getElementById('mobileMenuBtn').addEventListener('click', () => {
+        if (window.innerWidth <= 960) {
+          if (sidebar.classList.contains('mobile-open')) {
+            closeMobileSidebar();
+          } else {
+            openMobileSidebar();
+          }
+        } else {
+          appShell.classList.toggle('sidebar-collapsed');
+        }
+      });
+
+      sidebarScrim.addEventListener('click', closeMobileSidebar);
+
+      // Mobile Bottom Navigation Bar Handlers
+      document.getElementById('mobNavAllBtn').addEventListener('click', () => {
+        state.filterStatus = 'all';
+        state.filterFolder = 'all';
+        state.filterTag = null;
+        closeMobileSidebar();
+        renderAll();
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      });
+
+      document.getElementById('mobNavUnreadBtn').addEventListener('click', () => {
+        state.filterStatus = state.filterStatus === 'Unread' ? 'all' : 'Unread';
+        closeMobileSidebar();
+        renderAll();
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      });
+
+      document.getElementById('mobNavAddBtn').addEventListener('click', () => {
+        closeMobileSidebar();
+        renderSidebarAndStats();
+        document.getElementById('addModalBackdrop').classList.add('open');
+      });
+
+      document.getElementById('mobNavQuizBtn').addEventListener('click', () => {
+        closeMobileSidebar();
+        state.quizIndex = 0;
+        renderQuizCard();
+        document.getElementById('quizModalBackdrop').classList.add('open');
+      });
+
+      document.getElementById('mobNavFiltersBtn').addEventListener('click', () => {
+        if (sidebar.classList.contains('mobile-open')) {
+          closeMobileSidebar();
+        } else {
+          openMobileSidebar();
+        }
+      });
+
+      // Collapsible Sidebar Sections
+      document.querySelectorAll('[data-toggle-section]').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const secId = btn.getAttribute('data-toggle-section');
+          const secEl = document.getElementById(secId);
+          if (secEl) secEl.classList.toggle('collapsed');
+        });
+      });
+
+      document.getElementById('sidebarTagSearch').addEventListener('input', (e) => {
+        state.sidebarTagQuery = e.target.value;
+        renderSidebarAndStats();
+      });
+
+      document.getElementById('toggleAllTagsBtn').addEventListener('click', () => {
+        state.showAllTags = !state.showAllTags;
+        renderSidebarAndStats();
+      });
+
+      document.getElementById('clearActiveFilterBtn').addEventListener('click', () => {
+        state.filterTag = null;
+        state.filterFolder = 'all';
+        renderAll();
+      });
+
+      document.querySelectorAll('#statusNavList .nav-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          state.filterStatus = btn.dataset.filterStatus;
+          closeMobileSidebar();
+          renderAll();
+        });
+      });
+
+      document.querySelectorAll('#typePillsContainer .pill-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          state.filterType = btn.dataset.type;
+          renderAll();
+        });
+      });
+
+      document.getElementById('sortSelect').addEventListener('change', (e) => {
+        state.sortBy = e.target.value;
+        renderCards();
+      });
+
+      document.getElementById('quickCaptureForm').addEventListener('submit', (e) => {
+        e.preventDefault();
+        const input = document.getElementById('quickUrlInput');
+        const url = input.value.trim();
+        if (!url) return;
+
+        const existing = state.bookmarks.find(b => b.url.toLowerCase() === url.toLowerCase());
+        if (existing) {
+          showToast('Link already in your MindShelf library — opening reader drawer!');
+          openReaderDrawer(existing.id);
+          input.value = '';
+          return;
+        }
+
+        const newItem = inferBookmarkFromUrl(url);
+        state.bookmarks.unshift(newItem);
+        saveLocalState();
+        input.value = '';
+        renderAll();
+
+        if (window.google && window.google.script && window.google.script.run) {
+          window.google.script.run.addBookmarkToSheet(newItem);
+        }
+        showToast('Bookmark captured with preview card!');
+      });
+
+      const searchInput = document.getElementById('searchInput');
+      searchInput.addEventListener('input', (e) => {
+        state.searchQuery = e.target.value;
+        renderCards();
+      });
+
+      window.addEventListener('keydown', (e) => {
+        const inField = ['INPUT', 'TEXTAREA', 'SELECT'].includes(document.activeElement.tagName);
+        if (e.key === '/' && !inField) {
+          e.preventDefault();
+          searchInput.focus();
+        }
+        if (e.key === '[' && !inField) {
+          e.preventDefault();
+          appShell.classList.toggle('sidebar-collapsed');
+        }
+        if (e.key === 'Escape') {
+          document.querySelectorAll('.backdrop.open').forEach(b => b.classList.remove('open'));
+          closeMobileSidebar();
+        }
+      });
+
+      document.getElementById('gridViewBtn').addEventListener('click', () => {
+        state.viewMode = 'grid';
+        renderCards();
+      });
+      document.getElementById('listViewBtn').addEventListener('click', () => {
+        state.viewMode = 'list';
+        renderCards();
+      });
+
+      document.getElementById('resetFiltersBtn').addEventListener('click', () => {
+        state.filterStatus = 'all';
+        state.filterFolder = 'all';
+        state.filterType = 'all';
+        state.filterTag = null;
+        state.searchQuery = '';
+        searchInput.value = '';
+        renderAll();
+      });
+
+      document.getElementById('themeToggleBtn').addEventListener('click', () => {
+        const html = document.documentElement;
+        const next = html.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+        html.setAttribute('data-theme', next);
+        const iconSvg = document.getElementById('themeIconSvg');
+        if (next === 'light') {
+          iconSvg.innerHTML = '<circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>';
+        } else {
+          iconSvg.innerHTML = '<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>';
+        }
+      });
+
+      document.getElementById('exportJsonBtn').addEventListener('click', () => {
+        const dataStr = 'data:text/json;charset=utf-8,' + encodeURIComponent(JSON.stringify(state.bookmarks, null, 2));
+        const a = document.createElement('a');
+        a.href = dataStr;
+        a.download = `mindshelf-backup-${new Date().toISOString().slice(0, 10)}.json`;
+        a.click();
+        showToast('Exported MindShelf JSON backup');
+      });
+
+      document.getElementById('closeDrawerBtn').addEventListener('click', () => {
+        document.getElementById('readerBackdrop').classList.remove('open');
+      });
+      document.getElementById('readerBackdrop').addEventListener('click', (e) => {
+        if (e.target.id === 'readerBackdrop') {
+          document.getElementById('readerBackdrop').classList.remove('open');
+        }
+      });
+
+      document.getElementById('drawerToggleStatusBtn').addEventListener('click', () => {
+        if (!state.activeDrawerId) return;
+        toggleBookmarkStatus(state.activeDrawerId);
+        openReaderDrawer(state.activeDrawerId);
+      });
+
+      document.getElementById('saveDrawerNotesBtn').addEventListener('click', () => {
+        const bm = state.bookmarks.find(b => b.id === state.activeDrawerId);
+        if (!bm) return;
+        bm.notes = document.getElementById('drawerNotesInput').value;
+        saveLocalState();
+        renderCards();
+        if (window.google && window.google.script && window.google.script.run && bm.rowNumber) {
+          window.google.script.run.updateBookmarkInSheet(bm.rowNumber, bm.status, bm.notes);
+        }
+        showToast('Saved personal note');
+      });
+
+      document.getElementById('drawerDeleteBtn').addEventListener('click', () => {
+        if (!state.activeDrawerId) return;
+        state.bookmarks = state.bookmarks.filter(b => b.id !== state.activeDrawerId);
+        saveLocalState();
+        document.getElementById('readerBackdrop').classList.remove('open');
+        renderAll();
+        showToast('Bookmark removed from view');
+      });
+
+      document.getElementById('copySnapshotBtn').addEventListener('click', () => {
+        const text = document.getElementById('drawerSnapshot').textContent;
+        navigator.clipboard?.writeText(text);
+        showToast('Snapshot copied to clipboard');
+      });
+
+      const addModal = document.getElementById('addModalBackdrop');
+      document.getElementById('openAddModalBtn').addEventListener('click', () => {
+        renderSidebarAndStats();
+        addModal.classList.add('open');
+      });
+      document.getElementById('closeAddModalBtn').addEventListener('click', () => addModal.classList.remove('open'));
+      document.getElementById('cancelAddModalBtn').addEventListener('click', () => addModal.classList.remove('open'));
+
+      document.getElementById('addBookmarkForm').addEventListener('submit', (e) => {
+        e.preventDefault();
+        const url = document.getElementById('inputUrl').value.trim();
+        const title = document.getElementById('inputTitle').value.trim();
+        const customThumb = document.getElementById('inputThumb').value.trim();
+        const folder = document.getElementById('inputFolder').value;
+        const type = document.getElementById('inputType').value;
+        const rawTags = document.getElementById('inputTags').value.trim();
+        const tags = rawTags
+          ? rawTags.split(/[,\s]+/).filter(Boolean).map(t => t.startsWith('#') ? t.toLowerCase() : '#' + t.toLowerCase())
+          : ['#bookmark'];
+        const summary = document.getElementById('inputSummary').value.trim();
+        const snapshot = document.getElementById('inputSnapshot').value.trim();
+        const notes = document.getElementById('inputNotes').value.trim();
+        const today = new Date().toISOString().slice(0, 10);
+
+        const existing = state.bookmarks.find(b => b.url.toLowerCase() === url.toLowerCase());
+        if (existing) {
+          existing.notes = [existing.notes, notes].filter(Boolean).join(' | ');
+          saveLocalState();
+          addModal.classList.remove('open');
+          renderAll();
+          showToast('Duplicate URL detected — merged your note into existing bookmark!');
+          return;
+        }
+
+        const newItem = {
+          id: 'bm-' + Date.now(),
+          date: today,
+          title,
+          url,
+          customThumb,
+          folder,
+          tags,
+          type,
+          summary: summary || '• Saved via MindShelf Web UI.',
+          snapshot: snapshot || `Title: ${title} (${url})`,
+          notes,
+          status: 'Unread'
+        };
+
+        state.bookmarks.unshift(newItem);
+        saveLocalState();
+        addModal.classList.remove('open');
+        e.target.reset();
+        renderAll();
+
+        if (window.google && window.google.script && window.google.script.run) {
+          window.google.script.run.addBookmarkToSheet(newItem);
+          showToast('Saved to MindShelf Bookmarks Google Sheet!');
+        } else {
+          showToast('Saved to MindShelf with preview thumbnail!');
+        }
+      });
+
+      const quizModal = document.getElementById('quizModalBackdrop');
+      function renderQuizCard() {
+        if (state.bookmarks.length === 0) return;
+        const idx = state.quizIndex % state.bookmarks.length;
+        const bm = state.bookmarks[idx];
+        document.getElementById('quizCounter').textContent = `Bookmark ${idx + 1} of ${state.bookmarks.length}`;
+        document.getElementById('quizFolderBadge').textContent = `${bm.folder} • ${bm.type}`;
+        document.getElementById('quizQuestionTitle').textContent = `What are the core takeaways & technical snapshot inside "${bm.title}"?`;
+        document.getElementById('quizSummaryText').textContent = bm.summary || '';
+        document.getElementById('quizSnapshotText').textContent = bm.snapshot || '';
+        document.getElementById('quizAnswerArea').style.display = 'none';
+      }
+
+      document.getElementById('quizMeBtn').addEventListener('click', () => {
+        state.quizIndex = 0;
+        renderQuizCard();
+        quizModal.classList.add('open');
+      });
+      document.getElementById('closeQuizModalBtn').addEventListener('click', () => quizModal.classList.remove('open'));
+      document.getElementById('revealQuizBtn').addEventListener('click', () => {
+        document.getElementById('quizAnswerArea').style.display = 'block';
+      });
+      document.getElementById('nextQuizBtn').addEventListener('click', () => {
+        state.quizIndex = (state.quizIndex + 1) % Math.max(1, state.bookmarks.length);
+        renderQuizCard();
+      });
+      document.getElementById('markQuizReadBtn').addEventListener('click', () => {
+        if (state.bookmarks.length === 0) return;
+        const bm = state.bookmarks[state.quizIndex % state.bookmarks.length];
+        bm.status = 'Read';
+        saveLocalState();
+        renderAll();
+        showToast('Marked as Read!');
+      });
+
+      const scriptModal = document.getElementById('appsScriptBackdrop');
+      document.getElementById('openAppsScriptBtn').addEventListener('click', () => {
+        closeMobileSidebar();
+        scriptModal.classList.add('open');
+      });
+      document.getElementById('closeAppsScriptBtn').addEventListener('click', () => scriptModal.classList.remove('open'));
+      document.getElementById('copyCodeGsBtn').addEventListener('click', () => {
+        const code = document.getElementById('codeGsContent').textContent;
+        navigator.clipboard?.writeText(code);
+        showToast('Copied Code.gs to clipboard!');
+      });
+
+      document.getElementById('syncSheetBtn').addEventListener('click', syncFromBackend);
+    });
+  </script>
+</body>
+</html>
